@@ -24,7 +24,7 @@ const getAccountList = () => apiClient.get<Account[]>({ url: AccountApi.list }).
   return res;
 });
 
-const searchAccountList = (email: string) => apiClient.post<Account[]>({ url: AccountApi.search, data: {email} }).then((res) => {
+const searchAccountList = (email: string, comment: string) => apiClient.post<Account[]>({ url: AccountApi.search, data: {email,comment} }).then((res) => {
   // 将shareList转为json对象
   res.forEach((item) => {
     if (item.shareList) {
@@ -37,6 +37,7 @@ export interface AccountAddReq {
   id?: number;
   email: string;
   password: string;
+  comment: string;
   shared?: number;
   custom_type: string;
   custom_token: string;

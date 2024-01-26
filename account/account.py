@@ -3,6 +3,7 @@ from datetime import datetime
 
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
+from sqlalchemy import and_, text
 
 from model import db, User
 from util import login_tools, share_tools, pandora_tools
@@ -14,7 +15,6 @@ from util.pandora_tools import sync_pandora
 account_bp = Blueprint('account_bp', __name__)
 
 
-@jwt_required()
 @account_bp.route('/list')
 def account_list():
     accounts = db.session.query(User).all()
@@ -23,23 +23,26 @@ def account_list():
 
 
 @account_bp.route('/search', methods=['POST'])
-@jwt_required()
 def account_search():
     email = request.json.get('email') if request.json.get('email') else ''
-    accounts = db.session.query(User).filter(User.email.like(f'%{email}%')).all()
+    comment = request.json.get('comment') if request.json.get('comment') else ''
+    #accounts = db.session.query(User).filter(User.email.like(f'%{email}%'), User.comment.like(f'%{comment}%')).all()
+    accounts = db.session.query(User).filter(and_(User.email.like(f'%{email}%') if email else text(''),
+                                                  User.comment.like(f'%{comment}%') if comment else text(
+                                                      ''))).all()
     return ApiResponse.success(accounts)
 
 
 @account_bp.route('/add', methods=['POST'])
-@jwt_required()
 def account_add():
     email = request.json.get('email')
     password = request.json.get('password')
+    comment = request.json.get('comment')
     custom_token_type = request.json.get('custom_type')
     custom_token = request.json.get('custom_token')
     shared = 1 if request.json.get('shared') else 0
 
-    user = User(email=email, password=password, shared=shared,
+    user = User(email=email, password=password, comment=comment,shared=shared,
                 share_list='[]',
                 create_time=datetime.now(),
                 update_time=datetime.now())
@@ -67,11 +70,11 @@ def account_add():
 
 
 @account_bp.route('/update', methods=['POST'])
-@jwt_required()
 def account_update():
     account_id = request.json.get('id')
     email = request.json.get('email')
     password = request.json.get('password')
+    comment = request.json.get('comment')
     custom_token_type = request.json.get('custom_type')
     custom_token = request.json.get('custom_token')
     shared = 1 if request.json.get('shared') else 0
@@ -79,6 +82,7 @@ def account_update():
     user = db.session.query(User).filter_by(id=account_id).first()
     user.email = email
     user.password = password
+    user.comment = comment
     user.shared = shared
     user.update_time = datetime.now()
 
@@ -102,7 +106,6 @@ def account_update():
 
 
 @account_bp.route('/delete', methods=['POST'])
-@jwt_required()
 def account_delete():
     account_id = request.json.get('id')
     user = db.session.query(User).filter_by(id=account_id).first()

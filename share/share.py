@@ -10,6 +10,9 @@ from model import db, User
 from util import share_tools
 from util.api_response import ApiResponse
 from util.pandora_tools import sync_pandora
+from urllib.parse import urlparse
+
+
 
 share_bp = Blueprint('share_bp', __name__)
 
@@ -56,6 +59,11 @@ def share_add():
     password = request.json.get('password')
     comment = request.form.get('comment')
 
+    #解析域名部分
+    url = request.url
+    parsed_url = urlparse(url)
+    base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+
     account = db.session.query(User).filter_by(id=account_id).first()
 
     if account:
@@ -76,6 +84,7 @@ def share_add():
                 'password': password,
                 'comment': comment,
                 'share_token': res['token_key'],
+                'share_link': base_url + '/forward/' + unique_name
             })
             db.session.query(User).filter_by(id=account_id).update({'share_list': json.dumps(_share_list), 'update_time': datetime.now()})
             db.session.commit()

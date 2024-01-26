@@ -77,6 +77,11 @@ export default function SharePage() {
         <Input value={text} readOnly/>
       ),
     },
+    { title: 'Share Link', dataIndex: 'shareLink', align: 'center',
+      render: (text) => (
+        <Input value={text} readOnly/>
+      ),
+    },
     { title: t('token.comment'), dataIndex: 'comment', align: 'center',
       render: (text) => (
         <Typography.Text style={{maxWidth: 500}} ellipsis={true}>
@@ -133,7 +138,7 @@ export default function SharePage() {
       return shareService.searchShare(email, uniqueName)
     }
   })
-
+  
   const onSearchFormReset = () => {
     searchForm.resetFields();
   };

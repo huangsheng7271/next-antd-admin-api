@@ -13,6 +13,7 @@ from flask_moment import Moment
 from flask_apscheduler import APScheduler
 from loguru import logger
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 import account
 import share
@@ -22,6 +23,7 @@ from util.api_response import ApiResponse
 DATABASE = 'helper.db'
 
 app = Flask(__name__, static_folder='frontend/dist', static_url_path='/')
+CORS(app)
 Bootstrap5(app)
 Moment().init_app(app)
 # 生成随机的secret_key
@@ -51,7 +53,8 @@ def custom_expired_token_callback(error_string, expired_token):
 
 
 def check_require_config():
-    PANDORA_NEXT_PATH = os.getenv('PANDORA_NEXT_PATH')
+    # PANDORA_NEXT_PATH = os.getenv('PANDORA_NEXT_PATH')
+    PANDORA_NEXT_PATH='/Users/huangsheng/Downloads/pandora-next/data'
     # 如果PANDORA_NEXT_PATH 为空则检查/data下是否存在config.json
     if not PANDORA_NEXT_PATH:
         if os.path.exists('/data/config.json'):
@@ -59,7 +62,8 @@ def check_require_config():
         else:
             logger.error("请配置PandoraNext相关环境变量")
             exit(1)
-    PANDORA_NEXT_DOMAIN = os.getenv('PANDORA_NEXT_DOMAIN')
+    # PANDORA_NEXT_DOMAIN = os.getenv('PANDORA_NEXT_DOMAIN')
+    PANDORA_NEXT_DOMAIN='http://43.153.28.250:8181'
     if not PANDORA_NEXT_DOMAIN:
         logger.error("请配置PandoraNext相关环境变量")
         exit(1)
@@ -181,6 +185,28 @@ app.json = StandardJSONProvider(app)
 def catch_all(path):
     return app.send_static_file("index.html")
 
+
+def account2share(accounts):
+    shares = []
+    for account in accounts:
+        _share_list = json.loads(account.share_list)
+        for share in _share_list:
+            share['email'] = account.email
+            share['account_id'] = account.id
+            shares.append(share)
+    return shares
+
+
+from flask import request
+from model import db, User
+from sqlalchemy import and_, text
+@app.route('/forward/<unique_name>')
+def redirect_to_login(unique_name):
+    accounts = db.session.query(User).filter(User.share_list.like(f'%{unique_name}%') if unique_name else text('')).all()
+    shares = account2share(accounts)
+    share_token = shares[0]['share_token']
+    redirect_url = f"https://chat.oaifree.com/auth/login_share?token={share_token}"
+    return redirect(redirect_url)
 
 def create_app():
     app.register_blueprint(auth.auth_bp, url_prefix='/api')

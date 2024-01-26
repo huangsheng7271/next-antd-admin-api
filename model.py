@@ -8,6 +8,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.Text)
     password = db.Column(db.Text)
+    comment = db.Column(db.Text)
     session_token = db.Column(db.Text)
     access_token = db.Column(db.Text)
     share_list = db.Column(db.Text)
@@ -17,7 +18,7 @@ class User(db.Model):
     refresh_token = db.Column(db.Text)
 
     def keys(self):
-        return ['id', 'email', 'password', 'session_token', 'access_token', 'share_list', 'create_time', 'update_time',
+        return ['id', 'email', 'password','comment','session_token', 'access_token', 'share_list', 'create_time', 'update_time',
                 'shared', 'refresh_token']
 
     def __getitem__(self, item):

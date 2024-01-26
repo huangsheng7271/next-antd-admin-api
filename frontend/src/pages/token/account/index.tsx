@@ -59,6 +59,7 @@ export default function AccountPage() {
   const [refreshAccountId, setRefreshAccountId] = useState<number | undefined>(-1);
 
   const searchEmail = Form.useWatch('email', searchForm);
+  const searchComment = Form.useWatch('comment', searchForm);
 
 
   const [AccountModalPros, setAccountModalProps] = useState<AccountModalProps>({
@@ -137,6 +138,13 @@ export default function AccountPage() {
             {text}
           </Typography.Text>
         )
+    },
+    {title: t('token.comment'), dataIndex: 'comment', align: 'left',  ellipsis: true,
+      render: (text) => (
+        <Typography.Text style={{whiteSpace:'pre-line'}} ellipsis={true}>
+          {text}
+        </Typography.Text>
+      )
     },
     {
       title: t('token.tokenType'),
@@ -238,8 +246,8 @@ export default function AccountPage() {
   ];
 
   const {data} = useQuery({
-    queryKey: ['accounts', searchEmail],
-    queryFn: () => accountService.searchAccountList(searchEmail)
+    queryKey: ['accounts', searchEmail, searchComment],
+    queryFn: () => accountService.searchAccountList(searchEmail, searchComment)
   })
 
   const { data: taskStatus } = useQuery({
@@ -318,11 +326,14 @@ export default function AccountPage() {
         id: record.id,
         email: record.email,
         password: record.password,
+        comment: record.comment,
         shared: record.shared,
         custom_type: tokenType,
         custom_token: token,
       }
     }));
+
+    console.log(AccountModalPros.formValue)
   };
 
   return (
@@ -335,7 +346,12 @@ export default function AccountPage() {
                 <Input/>
               </Form.Item>
             </Col>
-            <Col span={18} lg={18}>
+            <Col span={6} lg={6}>
+              <Form.Item<SearchFormFieldType> label={t('token.comment')} name="comment" className="!mb-0">
+                <Input/>
+              </Form.Item>
+            </Col>
+            <Col span={12} lg={12}>
               <div className="flex justify-end">
                 <Button onClick={onSearchFormReset}>{t('token.reset')}</Button>
                 <Button type="primary" className="ml-4">
@@ -444,9 +460,9 @@ function AccountModal({title, show, formValue, onOk, onCancel}: AccountModalProp
   const [loading, setLoading] = useState(false);
   const {t} = useTranslation()
 
-  // useEffect(() => {
-  //   form.setFieldsValue({...formValue});
-  // }, [formValue, form]);
+  useEffect(() => {
+    form.setFieldsValue({...formValue});
+  }, [formValue, form]);
 
   const onModalOk = () => {
     form.validateFields().then((values) => {
@@ -470,13 +486,11 @@ function AccountModal({title, show, formValue, onOk, onCancel}: AccountModalProp
 
   return (
     <Modal title={title} open={show} onOk={onModalOk} onCancel={() => {
-      form.resetFields();
       onCancel();
     }} okButtonProps={{
       loading: loading,
     }} destroyOnClose={false}>
       <Form
-        initialValues={formValue}
         form={form}
         layout="vertical"
         preserve={false}
@@ -489,6 +503,9 @@ function AccountModal({title, show, formValue, onOk, onCancel}: AccountModalProp
         </Form.Item>
         <Form.Item<AccountAddReq> label={t("token.password")} name="password" required>
           <Password/>
+        </Form.Item>
+        <Form.Item<AccountAddReq> label={t("token.comment")} name="comment">
+          <Input.TextArea/>
         </Form.Item>
         <Form.Item<AccountAddReq> label={t("token.share")} name="shared" labelAlign={'left'}
                                   valuePropName="checked" getValueFromEvent={

@@ -55,6 +55,7 @@ export interface Account {
   id: number;
   email: string;
   password: string;
+  comment: string;
   sessionToken?: string;
   accessToken?: string;
   createTime?: string;
@@ -68,7 +69,7 @@ export interface Share {
   accountId: number;
   email?: string;
   uniqueName: string;
-  password: string
+  password: string;
   shareToken?: string;
   comment: string;
 }
